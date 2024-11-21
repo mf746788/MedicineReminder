@@ -1,8 +1,11 @@
 package com.medicine.reminder
 
+import android.content.Context
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -29,6 +32,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -57,13 +61,14 @@ import com.medicine.reminder.util.SnackbarUtil
 fun MedicineReminder(
     analyticsHelper: AnalyticsHelper
 ) {
+
     MedicineReminderTheme {
         // A surface container using the 'background' color from the theme
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
-            val navController = rememberNavController()
+            val navController = rememberNavController() // Correctly getting the navController
             val doseTopLevelNavigation = remember(navController) {
                 DoseTopLevelNavigation(navController)
             }
@@ -71,15 +76,14 @@ fun MedicineReminder(
             val navBackStackEntry by navController.currentBackStackEntryAsState()
             val currentDestination = navBackStackEntry?.destination
 
-            val bottomBarVisibility = rememberSaveable { (mutableStateOf(true)) }
-            val fabVisibility = rememberSaveable { (mutableStateOf(true)) }
+            val bottomBarVisibility = rememberSaveable { mutableStateOf(true) }
+            val fabVisibility = rememberSaveable { mutableStateOf(true) }
 
             Scaffold(
-                modifier = Modifier.padding(16.dp, 0.dp),
+                modifier = Modifier.padding(16.dp, 20.dp),
                 containerColor = Color.Transparent,
                 contentColor = MaterialTheme.colorScheme.onBackground,
                 floatingActionButton = {
-
                     AnimatedVisibility(
                         visible = fabVisibility.value,
                         enter = slideInVertically(initialOffsetY = { it }),
@@ -116,12 +120,9 @@ fun MedicineReminder(
                     Modifier
                         .fillMaxSize()
                         .windowInsetsPadding(
-                            WindowInsets.safeDrawing.only(
-                                WindowInsetsSides.Horizontal
-                            )
+                            WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)
                         )
                 ) {
-
                     DoseNavHost(
                         bottomBarVisibility = bottomBarVisibility,
                         fabVisibility = fabVisibility,
@@ -133,9 +134,48 @@ fun MedicineReminder(
                     )
                 }
             }
+
+            // Pass navController to the logout button
+            Box(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                val context = LocalContext.current
+                Surface(
+                    modifier = Modifier
+                        .clickable {
+                            // Pass navController here
+                            openLoginScreen( navController, context)
+                        }
+                        .align(Alignment.TopEnd)
+                        .padding(6.dp),
+                    color = MaterialTheme.colorScheme.surface
+                ) {
+                    Text("Logout")
+                }
+            }
         }
     }
 }
+
+fun openLoginScreen(navController: NavController, context: Context) {
+    // open login screen
+    (context as MainActivity).finish()
+    logout(navController, context)
+}
+
+fun logout(navController: NavController, context: Context) {
+    // Clear the "isLoggedIn" preference to log out the user
+    val sharedPreferences = context.getSharedPreferences("AppPreferences", Context.MODE_PRIVATE)
+    sharedPreferences.edit().putBoolean("isLoggedIn", false).apply()
+
+    // Navigate to the Login screen
+    try {
+        navController.navigate("LoginScreen")
+    } catch (e: Exception) {
+        Log.e("DD", e.message.toString()) //exception is here
+    }
+}
+
 
 @Composable
 private fun DoseBottomBar(
@@ -210,6 +250,7 @@ fun DoseFAB(navController: NavController, analyticsHelper: AnalyticsHelper) {
         containerColor = MaterialTheme.colorScheme.tertiary
     )
 }
+
 
 @Preview(showBackground = true)
 @Composable
