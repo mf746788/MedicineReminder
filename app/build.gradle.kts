@@ -5,7 +5,6 @@ plugins {
     alias(libs.plugins.kapt)
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.google.services)
     alias(libs.plugins.firebase.crashlytics)
 }
 
